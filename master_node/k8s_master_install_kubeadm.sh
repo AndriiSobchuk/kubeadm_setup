@@ -59,4 +59,5 @@ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
 # 6. Install calico
 kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/tigera-operator.yaml
+kubectl apply -f https://docs.projectcalico.org/v3.14/manifests/calico.yaml
 
