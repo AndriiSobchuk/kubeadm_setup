@@ -59,6 +59,6 @@ sudo systemctl enable --now cri-docker.socket
 echo "Joining k8s cluster..."
 
 ##### Link worker to master
-sudo kubeadm join $K8S_MASTER:$K8S_PORT --token wxjhr8.ufgalefxewn807yh --discovery-token-ca-cert-hash sha256:4800107f867b1165a522c70815d817118a20f15fbaedc4d858bb483b9a671e43 --cri-socket=unix:///var/run/cri-dockerd.sock
+sudo kubeadm join $K8S_MASTER_IP:$K8S_MASTER_PORT --token wxjhr8.ufgalefxewn807yh --discovery-token-ca-cert-hash sha256:4800107f867b1165a522c70815d817118a20f15fbaedc4d858bb483b9a671e43 --cri-socket=unix:///var/run/cri-dockerd.sock
 
 echo "Installation finished! Worker is ready!"
