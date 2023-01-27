@@ -4,31 +4,37 @@ set -x
 echo "Start master node requirements installation..."
 
 # Install Docker
+# Check if Docker is installed on the system
+if ! [ -x "$(command -v docker)" ]; then
+    # If not, install it
+    sudo apt-get update
+    sudo apt-get install \
+      ca-certificates \
+      curl \
+      gnupg \
+      lsb-release
+    sudo mkdir -p /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg --batch --yes
 
-sudo apt-get update
-sudo apt-get install \
-    ca-certificates \
-    curl \
-    gnupg \
-    lsb-release
-sudo mkdir -p /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg --batch --yes
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    sudo apt-get update
+    sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin -y
+fi
 
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-sudo apt-get update
-sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin -y
+# check if cri-dockerd is installed
 
-# 2. Install cri-dockerd
-git clone https://github.com/Mirantis/cri-dockerd.git
-
-# 2.1 Install GO
-wget https://storage.googleapis.com/golang/getgo/installer_linux
-chmod +x ./installer_linux
-./installer_linux
-source ~/.bash_profile
-
+if [ $(dpkg-query -W -f='${Status}' golang 2>/dev/null | grep -c "ok installed") -eq 0 ];
+then
+    # install golang
+    wget https://storage.googleapis.com/golang/getgo/installer_linux
+    chmod +x ./installer_linux
+    ./installer_linux
+    source ~/.bash_profile
+fi
 
 # 2.2 Enable cri-docker service (probably with sudo)
+git clone https://github.com/Mirantis/cri-dockerd.git
+
 cd cri-dockerd
 mkdir bin
 go build -o bin/cri-dockerd
@@ -45,12 +51,43 @@ sudo apt-get update
 sudo apt-get install -y apt-transport-https ca-certificates curl
 sudo curl -fsSLo /etc/apt/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
 echo "deb [signed-by=/etc/apt/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
-sudo apt-get update
-sudo apt-get install -y kubelet kubeadm kubectl
+
+# Check if kubeadm, kubectl, kubelet are installed
+kubeadm_installed=$(dpkg -s kubeadm | grep "Status")
+kubectl_installed=$(dpkg -s kubectl | grep "Status")
+kubelet_installed=$(dpkg -s kubelet | grep "Status")
+
+# If not installed, install
+if [[ $kubeadm_installed == "Status: install ok installed" ]]; then
+    echo "Kubeadm is already installed."
+else
+    echo "Installing Kubeadm..."
+    sudo apt-get update && sudo apt-get install -y kubeadm
+fi
+
+if [[ $kubectl_installed == "Status: install ok installed" ]]; then
+    echo "Kubectl is already installed."
+else
+    echo "Installing Kubectl..."
+    sudo apt-get update && sudo apt-get install -y kubectl
+fi
+
+if [[ $kubelet_installed == "Status: install ok installed" ]]; then
+    echo "Kubelet is already installed."
+else
+    echo "Installing Kubelet..."
+    sudo apt-get update && sudo apt-get install -y kubelet
+fi
 sudo apt-mark hold kubelet kubeadm kubectl
 
 # 4. Setup network cidr
-sudo kubeadm init --pod-network-cidr=192.168.0.0/16 --cri-socket=unix:///var/run/cri-dockerd.sock
+
+# Check if kubeadm is already initialized
+if [ "$(kubeadm init --dry-run 2>&1 | grep 'already initialized')" ]; then
+    echo "kubeadm is already initialized"
+else
+    sudo kubeadm init --pod-network-cidr=192.168.0.0/16 --cri-socket=unix:///var/run/cri-dockerd.sock
+fi
 
 # 5. Start using cluster
 mkdir -p $HOME/.kube
