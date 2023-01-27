@@ -21,7 +21,7 @@ if ! [ -x "$(command -v docker)" ]; then
     sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin -y
 fi
 
-# check if cri-dockerd is installed
+# check if golang is installed
 
 if [ $(dpkg-query -W -f='${Status}' golang 2>/dev/null | grep -c "ok installed") -eq 0 ];
 then
