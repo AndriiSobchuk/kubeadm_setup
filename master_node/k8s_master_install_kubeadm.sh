@@ -49,8 +49,11 @@ sudo apt-get update
 sudo apt-get install -y kubelet kubeadm kubectl
 sudo apt-mark hold kubelet kubeadm kubectl
 
-# 4. Setup network cidr
-sudo kubeadm init --pod-network-cidr=192.168.0.0/16 --cri-socket=unix:///var/run/cri-dockerd.sock
+# 4. Kubeadm initialize 
+#sudo kubeadm init --pod-network-cidr=192.168.0.0/16 --cri-socket=unix:///var/run/cri-dockerd.sock
+KUBEADMIN_OUTPUT=$(sudo kubeadm init --pod-network-cidr=192.168.0.0/16 --cri-socket=unix:///var/run/cri-dockerd.sock)
+touch kubeadm_join.sh
+echo "$KUBEADMIN_OUTPUT" | tail -2 >> kubeadm_join.sh
 
 # 5. Start using cluster
 mkdir -p $HOME/.kube
