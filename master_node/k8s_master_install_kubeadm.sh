@@ -2,6 +2,7 @@
 
 set -x
 echo "Start master node requirements installation..."
+export WD_KUBEADM=$PWD
 
 # Install Docker
 
@@ -51,8 +52,9 @@ sudo apt-mark hold kubelet kubeadm kubectl
 
 # 4. Kubeadm initialize 
 #sudo kubeadm init --pod-network-cidr=192.168.0.0/16 --cri-socket=unix:///var/run/cri-dockerd.sock
-KUBEADMIN_OUTPUT=$(sudo kubeadm init --pod-network-cidr=192.168.0.0/16 --cri-socket=unix:///var/run/cri-dockerd.sock)
+cd $WD_KUBEADM
 touch kubeadm_join.sh
+KUBEADMIN_OUTPUT=$(sudo kubeadm init --pod-network-cidr=192.168.0.0/16 --cri-socket=unix:///var/run/cri-dockerd.sock)
 echo "$KUBEADMIN_OUTPUT" | tail -2 >> kubeadm_join.sh
 
 # 5. Start using cluster
