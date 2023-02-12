@@ -56,9 +56,11 @@ sudo systemctl daemon-reload
 sudo systemctl enable cri-docker.service
 sudo systemctl enable --now cri-docker.socket
 
-echo "Joining k8s cluster..."
+
+echo "Installation finished! You need to run kubeadm join command that could be found on master node in files kubeadm_join.sh OR full_kubeadm_init_output.sh OR run following command locally setting up master IP, port=6443, token and sha256 hash /
+sudo kubeadm join $K8S_MASTER_IP:$K8S_MASTER_PORT --token $TOKEN --discovery-token-ca-cert-hash sha256:$HASH --cri-socket=unix:///var/run/cri-dockerd.sock"
 
 ##### Link worker to master
-sudo kubeadm join $K8S_MASTER_IP:$K8S_MASTER_PORT --token wxjhr8.ufgalefxewn807yh --discovery-token-ca-cert-hash sha256:4800107f867b1165a522c70815d817118a20f15fbaedc4d858bb483b9a671e43 --cri-socket=unix:///var/run/cri-dockerd.sock
+#sudo kubeadm join $K8S_MASTER_IP:$K8S_MASTER_PORT --token wxjhr8.ufgalefxewn807yh --discovery-token-ca-cert-hash sha256:4800107f867b1165a522c70815d817118a20f15fbaedc4d858bb483b9a671e43 --cri-socket=unix:///var/run/cri-dockerd.sock
+#echo "Joining k8s cluster..."
 
-echo "Installation finished! Worker is ready!"
